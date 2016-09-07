@@ -261,6 +261,21 @@ jobs:
         params:
           GARDEN_ADDRESS: 10.0.1.12:7777
 
+  - name: netman-bump-rc
+    serial: true
+    plan:
+    - do:
+      - aggregate:
+        - get: netman-release
+          trigger: true
+          passed:
+            - netman-tests-mysql
+            - netman-tests-postgres
+        - get: netman-version
+          params: {pre: rc}
+      - put: netman-version
+        params: {file: netman-version/number}
+
   - name: pickelhelm-deploy
     serial_groups: [pickelhelm]
     plan:
@@ -287,7 +302,9 @@ jobs:
           trigger: true
         - get: netman-release
           trigger: true
-          passed: [netman-tests-postgres, netman-tests-mysql]
+          passed:
+          - netman-bump-rc
+          # passed: [netman-tests-postgres, netman-tests-mysql]
         - get: etcd-release-tarball
       - aggregate:
         - task: create-garden-runc-release-tarball
